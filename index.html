@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<title>Superpass Password Management System</title>
+		<!-- Bootstrap core CSS -->
+
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+		
+		
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+		
+		<script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/pbkdf2.js"></script>
+		<script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/components/sha256-min.js"></script>
+		<!---<script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/components/core-min.js"></script>-->
+
+		<style>
+			body {
+			padding-top: 40px;
+			padding-bottom: 40px;
+			background-color: #eee;
+			}
+
+			.form-signin {
+			max-width: 512px;
+			padding: 15px;
+			margin: 0 auto;
+			}
+			.form-signin .form-signin-heading,
+			.form-signin .checkbox {
+			margin-bottom: 10px;
+			}
+			.form-signin .checkbox {
+			font-weight: normal;
+			}
+			.form-signin .form-control {
+			position: relative;
+			height: auto;
+			-webkit-box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			  box-sizing: border-box;
+			padding: 10px;
+			font-size: 16px;
+			}
+			.form-signin .form-control:focus {
+			z-index: 2;
+			}
+			.form-signin input[type="email"] {
+			margin-bottom: -1px;
+			border-bottom-right-radius: 0;
+			border-bottom-left-radius: 0;
+			}
+			.form-signin input[type="password"] {
+			margin-bottom: 10px;
+			border-top-left-radius: 0;
+			border-top-right-radius: 0;
+			}
+			.password {
+			text-align:center;
+			font-family:monospace;
+			font-weight:bold;
+			}
+		</style>
+
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+		<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="container">
+			<form class="form-signin" role="form" id="site_pw_form">
+				<h2 class="form-signin-heading">Superpass Password Manager</h2>
+				<h4 class="form-signin-heading">Use this form to get or generate your superpass site passwords.</h4>
+				<h4><em>No registration is required and no information at all is sent to our servers or saved as a cookie.</em></h4>  
+				<!--<div class="input-group">
+					<input type="text" class="form-control" placeholder="Domain [e.g.,'facebook.com']" required autofocus>
+					<span class="input-group-addon">?</span>
+				</div>-->
+				<input id="sp_domain" type="text" class="form-control" placeholder="Domain [e.g.,'facebook.com']" required autofocus>
+				<input id="sp_username" type="text" class="form-control" placeholder="Username [optional]"> <!--Add rollover question mark here-->
+				<input id="sp_salt" type="text" class="form-control" placeholder="Salt [optional]">
+				<br/>				
+				<input id="sp_password" type="password" class="form-control" placeholder="Master Superpass Password" required>
+				<label class="checkbox">
+					<input type="checkbox" value="remember-me" disabled>Master Word Mode <em>(not supported yet)</em>
+				</label>
+				<button class="btn btn-lg btn-primary btn-block" id="site_submit_button">Get Site Password</button>
+			</form>
+			<div class="modal fade in" id="output_password_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+							<h4 class="modal-title" id="pw_modal_title"></h4>
+						</div>
+						<div class="modal-body">
+							<h1 id="output_password" class="password"></h1>
+							<p>Copy-Paste this password.  If you haven't yet, change your password on <em><span id="domainem"></span></em> to this. Login using this password.</p>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-primary" data-dismiss="modal" id="sp_button">OK</button>
+							<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+		
+		
+		<script type="text/javascript">
+			function pbkdf2_256(cjs,password,salt,iters)
+			{
+				var k = cjs.PBKDF2(password, salt, { keySize: 256/32 , iterations: iters, hasher: cjs.algo.SHA256});
+				return k;
+			}
+			function hexrshift(wao,amount)
+			{
+				var wa=wao.words;
+				var prev=0;
+				var i;
+				for(i=0;i<wa.length;i++)
+				{
+					np=wa[i] << (32-amount);
+					wa[i] >>>= amount;
+					wa[i] |= prev;
+					prev = np;
+				}
+				return wa;
+			}
+			function hexprint(cjs,wa)
+			{
+				//var hex  = cjs.enc.Hex.stringify(wa);
+				console.log(hex);
+			}
+			function getnext(bytes,bits)
+			{
+				var a=bytes.words[7] & ((1 << bits)-1);
+				hexrshift(bytes,bits);
+				return a;
+			}
+			function makepassword(cjs,bytes,length,punctuation)
+			{
+				var character_dictionary='abcdefghijklmnopqrstuvwxyz234567'; //base32 RFC...
+				
+				var wa=bytes;
+				var outpw='';
+				hexprint(cjs,wa);
+				outpw+=String.fromCharCode(65+getnext(wa,4));	//one upper case
+				hexprint(cjs,wa);
+				outpw+=String.fromCharCode(97+getnext(wa,4));	//one lower case
+				hexprint(cjs,wa);
+				outpw+=String.fromCharCode(50+getnext(wa,3));	//one digit (2-9)
+
+				hexprint(cjs,wa);
+				for(var x=0;x<(length-5);x++)
+				{
+					outpw+=character_dictionary.charAt(getnext(wa,5));
+					hexprint(cjs,wa);
+				}
+				if(punctuation)
+				{
+					outpw+='!';
+				}
+				else
+				{
+					outpw+='d';
+				}
+				outpw+=character_dictionary.charAt(getnext(wa,5));
+				return outpw
+			}
+
+			function superpass(cjs,master,domain,username,salt,length,punctuation)
+			{
+				metasalt=username+"|"+domain+"|"+salt;
+				bytes=pbkdf2_256(cjs,master,metasalt,(1 << 12));
+				hexprint(cjs,bytes);
+				
+				return makepassword(cjs,bytes,length,punctuation);
+			}
+		</script>
+		
+		<script type="text/javascript">
+			function selectText(element) 
+			{
+				var doc = document;
+				var text = doc.getElementById(element);    
+
+				if (doc.body.createTextRange) { // ms
+					var range = doc.body.createTextRange();
+					range.moveToElementText(text);
+					range.select();
+				} else if (window.getSelection) { // moz, opera, webkit
+					var selection = window.getSelection();            
+					var range = doc.createRange();
+					range.selectNodeContents(text);
+					selection.removeAllRanges();
+					selection.addRange(range);
+				}
+			}
+			
+			function modal_launched(e)
+			{
+				var domain=$('#sp_domain').val();
+				var username=$('#sp_username').val();
+				var salt=$('#sp_salt').val();
+				var sp_password=$('#sp_password').val();
+				
+				sp=superpass(CryptoJS,sp_password,domain,username,salt,12,false);
+				
+				$( "#sp_button" ).prop( "disabled", false );
+				$('#pw_modal_title').html('Your Site Password for <em>'+domain+'</em> is:');
+				$('#domainem').html(domain);
+				
+				$('#output_password').html(sp);
+			
+				selectText('output_password');
+				
+				return false;
+			}
+			
+			function init()
+			{
+				$('#site_pw_form').submit(site_submit_handler);
+				$("#output_password_modal").on('shown.bs.modal', modal_launched);
+
+				/*DEBUG
+				$('#sp_domain').val('facebook.com');
+				$('#sp_username').val('barb13');
+				$('#sp_password').val('lighthouse');
+				site_submit_handler();*/
+			}
+
+			function site_submit_handler()
+			{	
+				$('#pw_modal_title').html('Now remembering password...');
+				$('#output_password').html('<span class="glyphicon glyphicon-time"></span>');
+				$( "#sp_button" ).prop( "disabled", true );
+				$('#output_password_modal').modal('show');
+				
+				return false;
+			}
+		
+			$(init);
+							
+		</script>
+	</body>
+</html>
