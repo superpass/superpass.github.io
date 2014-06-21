@@ -83,7 +83,7 @@
 			<form class="form-signin" role="form" id="site_pw_form">
 				<h2 class="form-signin-heading">Superpass Password Manager</h2>
 				<h4 class="form-signin-heading">Use this form to get or generate your superpass site passwords.</h4>
-				<h4><em>No registration is required and no information at all is sent to our servers or saved as a cookie.</em></h4>  
+				<h4><em>No registration is required and no information at all is sent to our servers or saved as a cookie. Superpass is implemented entirely in client-side javascript</em></h4>  
 				<!--<div class="input-group">
 					<input type="text" class="form-control" placeholder="Domain [e.g.,'facebook.com']" required autofocus>
 					<span class="input-group-addon">?</span>
@@ -247,7 +247,7 @@
 			{	
 				$('#pw_modal_title').html('Now remembering password...');
 				$('#output_password').html('<span class="glyphicon glyphicon-time"></span>');
-				$("#sp_button" ).prop( "disabled", true );
+				$( "#sp_button" ).prop( "disabled", true );
 				$('#output_password_modal').modal('show');
 				
 				return false;
