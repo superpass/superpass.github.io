@@ -184,7 +184,7 @@
 
 			function superpass(cjs,master,domain,username,salt,length,punctuation)
 			{
-				metasalt=username+"|"+domain+"|"+salt;
+				metasalt=username+"|"+domain.toLowerCase()+"|"+salt;
 				bytes=pbkdf2_256(cjs,master,metasalt,(1 << 12));
 				hexprint(cjs,bytes);
 				
