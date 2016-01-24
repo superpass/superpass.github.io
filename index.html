@@ -303,7 +303,8 @@
 				source: substringMatcher(wordlist)
 			});
 			
-			$('#master-word-mode').click(function() {
+			function mnemonic_formatting()
+			{
 				if($('#master-word-mode').is(':checked')) {
 					$('#mnemonic-spacer').css("line-height", "150px");
 					$("#sp_password").prop("type", "text");
@@ -312,8 +313,9 @@
 					$('#mnemonic-spacer').css("line-height", "0px");
 					$("#sp_password").prop("type", "password");
 				}
-			});
-			$('#master-word-mode').click(); // initialize spacer
+			}
+			
+			$('#master-word-mode').click(mnemonic_formatting);
 		
 			$(init);
 
