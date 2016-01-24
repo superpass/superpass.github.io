@@ -231,15 +231,17 @@
 				var salt=$('#sp_salt').val();
 				var sp_password=$('#sp_password').val();
 				var sp_punctuation=$('#sp_punctuation').is(':checked');
-				
-				sp=superpass(CryptoJS,sp_password,domain,username,salt,12,sp_punctuation);
-				
+
+				var cjs = CryptoJS;
+				//bip39check(cjs, $('#sp_password').val());
+				sp=superpass(cjs,sp_password,domain,username,salt,12,sp_punctuation);
+
 				$( "#sp_button" ).prop( "disabled", false );
 				$('#pw_modal_title').html('Your Site Password for <em>'+domain+'</em> is:');
 				$('#domainem').html(domain);
-				
+
 				$('#output_password').html(sp);
-			
+
 				selectText('output_password');
 				
 				return false;
@@ -291,6 +293,47 @@
 				cb(matches);
 			};
 			};
+			
+			function mnemonicToBinary(mnemonicWords)
+			{
+				// Now, convert mnemonic to binary b
+				// index each word into the wordlist.
+				var b = 0;
+				for(var w = 0; w < mnemonicWords.length; w++)
+				{
+					var index = wordlist.indexOf(mnemonicWords[w]);
+					if(index == -1)
+						return -1;
+					b = b << 11; // wordlist is 2048 words, so 11 bits per word.
+					b = b | index;
+				}
+				return b;
+			}
+
+			function bip39check(cjs, mnemonic)
+			{
+				var words = mnemonic.split(' ');
+				var MS = words.length;
+				if(MS % 3 != 0)
+				{
+					console.log("BIP39 Verification: Must have a multiple of 3 words.");
+					return false;
+				}
+				var CS = (MS * 11) / 33;
+				var ENT = (MS * 11) - CS;
+
+				var b = mnemonicToBinary(words);
+				if(b == -1)
+				{
+					console.log("Invalid word.  Not found in wordlist.");
+					return false;
+				}
+				var entropy_bits = b >> CS;
+				var checksum_bits = b & (1 << CS -1);
+				
+				var new_checksum_bits = cjs.SHA256(entropy_bits) & (1 << CS -1);
+				return new_checksum_bits == checksum_bits;
+			}
 
 			$('#mnemonic-typeahead .typeahead').typeahead({
 				hint: true,
@@ -305,16 +348,15 @@
 			
 			function mnemonic_formatting()
 			{
+				var type = "password";
+				var height = "0px";
 				if($('#master-word-mode').is(':checked')) {
-					$('#mnemonic-spacer').css("line-height", "150px");
-					$("#sp_password").prop("type", "text");
+					type = "150px";
+					type = "text";
 				}
-				else {
-					$('#mnemonic-spacer').css("line-height", "0px");
-					$("#sp_password").prop("type", "password");
-				}
+				$('#mnemonic-spacer').css("line-height", height);
+				$("#sp_password").prop("type", type);
 			}
-			
 			$('#master-word-mode').click(mnemonic_formatting);
 		
 			$(init);
