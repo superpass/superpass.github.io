@@ -4,7 +4,15 @@
 
 var ls_encryption_key=null;
 var muid=null;
-var ls_state=null
+var ls_state=null;
+
+function reset_state()
+{
+	ls_encryption_key=null;
+	muid=null;
+	ls_state=null;
+}
+
 function sp2_is_loggedin()
 {
 	if(muid==null || ls_encryption_key === null || ls_encryption_key.length != 32)
@@ -14,16 +22,22 @@ function sp2_is_loggedin()
 	return true;
 }
 
+
+var mlogin_iters=1<<16;
+var recovery_iters=1<<16; //todo adjust these
+
 function sp2_login(master_username,mu_password)
 {
 	var local_muid=sha256(master_username).slice(0,8);
 	
-	var master_key=sha256.pbkdf2(master_username+mu_password,"superpass2",1<<16, 32);
+	console.log("Logging in");
+	var master_key=sha256.pbkdf2(mu_password,"sp2:"+master_username,mlogin_iters, 32);
+	console.log("Logged in");
 	
 	ls_encryption_key=master_key;
 	muid=local_muid;
-	//try
-	//{
+//	try
+//	{
 		ls_state=_ls_get();
 	//}
 	//catch(err)
@@ -54,7 +68,7 @@ function muidkey(muid)
 	var sm='muid'+uint2str(muid);
 	return sm;
 }
-function delete_muid()
+function sp2_delete_muid()
 {
 	localStorage.removeItem(muidkey(muid));
 }
@@ -71,6 +85,11 @@ function _ls_get()
 	}
 	nc=str2uint(item.nonce);
 	var jsstr=nacl.secretbox.open(str2uint(item.secretbox),nc,ls_encryption_key);
+	if(jsstr === null)
+	{
+		ls_encryption_key=null;
+		throw new Error("Master password incorrect for saved muid");
+	}
 	var dec=new TextDecoder();
 	return JSON.parse(dec.decode(jsstr));
 }
@@ -86,19 +105,71 @@ function _ls_set(key,value)
 	var msg=enc.encode(jsstr);
 	
 	var box=nacl.secretbox(msg,nonce,ls_encryption_key);
-	testdec=nacl.secretbox.open(box,nonce,ls_encryption_key);
-	//console.log(testdec);
-	//console.log(msg);
 
 	var item={'secretbox':uint2str(box),'nonce':uint2str(nonce)};
 	localStorage.setItem(muidkey(muid),JSON.stringify(item));
 	return oldval;
 }
 
+function hexrshift(wao,amount)
+{
+	var wa=wao.words;
+	var prev=0;
+	var i;
+	for(i=0;i<wa.length;i++)
+	{
+		np=wa[i] << (32-amount);
+		wa[i] >>>= amount;
+		wa[i] |= prev;
+		prev = np;
+	}
+	return wa;
+}
+
+function getnext(bytes,bits)
+{
+	var a=bytes.words[7] & ((1 << bits)-1);
+	hexrshift(bytes,bits);
+	return a;
+}
+//in superpass 2, punctuation is true by default.
+function makepassword(bytes,length,punctuation)
+{
+	var character_dictionary='abcdefghijklmnopqrstuvwxyz234567'; //base32 RFC...
+	
+	var wa=bytes;
+	var outpw='';
+	
+	outpw+=String.fromCharCode(65+getnext(wa,4));	//one upper case
+	outpw+=String.fromCharCode(97+getnext(wa,4));	//one lower case
+	outpw+=String.fromCharCode(50+getnext(wa,3));	//one digit (2-9)
+
+	for(var x=0;x<(length-5);x++)
+	{
+		outpw+=character_dictionary.charAt(getnext(wa,5));
+		hexprint(cjs,wa);
+	}
+	if(punctuation)
+	{
+		outpw+='!';
+	}
+	else
+	{
+		outpw+='d';
+	}
+	outpw+=character_dictionary.charAt(getnext(wa,5));
+	return outpw
+}
+
+function sp2_superpass(master,domain,username,salt,length,punctuation)
+{
+	metasalt=username+"|"+domain.toLowerCase()+"|"+salt;
+	bytes=sha256.pbkdf2(master,metasalt,recovery_iters);
+	
+	return makepassword(bytes,length,punctuation);
+}
+
 $(function()
 {
-	//console.log(sp2_is_loggedin());
-	sp2_login('steve132','hello');
-	//console.log(sp2_is_loggedin());
-	_ls_set('testkey','stuff');
+	reset_state();
 });

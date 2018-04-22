@@ -8,22 +8,291 @@
 <title>Superpass 2</title>
 
 
-
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+<link rel="stylesheet" href="superpass2.css">
+
 
 </head>
 <body>
-
+	<div class="container">
+		<form class="form-signin" role="form" id="site_pw_form">
+			<h2 class="form-signin-heading">Superpass Password Manager (Version 2)</h2>
+			<h4 class="form-signin-heading">Use this form to get or generate your superpass site passwords.</h4>
+			<h4><em>No registration is required and no information at all is sent to our servers or saved as a cookie. Superpass is implemented entirely in client-side javascript</em></h4>  
+			<!--<div class="input-group">
+				<input type="text" class="form-control" placeholder="Domain [e.g.,'facebook.com']" required autofocus>
+				<span class="input-group-addon">?</span>
+			</div>-->
+			<div class="row"><button id="cache_button" class="btn" type="button">Populate from Local Cache...</button></div>
+			<br/>
+			<div class="row"><input id="sp_domain" type="text" class="form-control" placeholder="Domain [e.g.,'facebook.com']" required autofocus></div>
+			<div class="row"><input id="sp_username" type="text" class="form-control" placeholder="Username [optional]"> <!--Add rollover question mark here--></div>
+			<div class="row"><input id="sp_salt" type="text" class="form-control" placeholder="Salt [optional]"></div>
+			<br/>				
+			<div class="row">
+				<div id="mnemonic-typeahead">
+					<input id="sp_password" type="password" class="form-control typeahead" placeholder="Master Superpass Password" required>
+				</div>
+			</div>
+			<div class="row"><br id="mnemonic-spacer" style="line-height:0px;"/></div>
+			<div class="row">
+				<label class="checkbox">
+					<input type="checkbox" id="master-word-mode" value="true">Master Word Mode</input>
+				</label>
+				<label class="checkbox">
+					<input id="sp_punctuation" type="checkbox" value="true">Include Punctuation</input>
+				</label>
+			</div>
+			<div class="row"><button class="btn btn-lg btn-primary btn-block" id="site_submit_button">Get Site Password</button></div>
+		</form>
+		<div class="modal fade in" id="cache_login_modal" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form class="form-signin" role="form" id="login_form">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+							<h4 class="modal-title">Login/Create user on local cache.</h4>
+						</div>
+						<div class="modal-body">
+							<div class="row"><input id="sp_login_username" type="text" class="form-control" placeholder="Superpass Username" required autofocus></div>
+							<div class="row"><input id="sp_login_password" type="password" class="form-control" placeholder="Password" required></div>
+							<div class="login_alert_location"></div>
+							<div hidden>
+								<div class="alert alert-warning alert-dismissible fade show login_alert_template" role="alert">
+									<span class="login_alert_text">Alert</span>
+									<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+									</button>
+									<button type="button" class="btn btn-danger" id="delete_cache_button">Delete User Cache</button>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-primary" id="login_button">Login</button>
+							<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade in" id="cache_view_modal" role="dialog" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form class="form-signin" role="form" id="login_form">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+							<h4 class="modal-title">Select a cache item</h4>
+						</div>
+						<div class="modal-body">
+							<select class="custom-select custom-select-sm">
+							  <option selected>Select a cached login</option>
+							  <option value="1">One</option>
+							  <option value="2">Two</option>
+							  <option value="3">Three</option>
+							</select>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-danger" id="delete_item_button">Delete</button>
+							<button type="button" class="btn btn-primary" id="populate_button">Populate</button>
+							<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade in" id="output_password_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title" id="pw_modal_title"></h4>
+					</div>
+					<div class="modal-body">
+						<h1 id="output_password" class="password"></h1>
+						<p>Copy-Paste this password.  If you haven't yet, change your password on <em><span id="domainem"></span></em> to this. Login using this password.</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" data-dismiss="modal" id="sp_button">OK</button>
+						<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
 	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+	<script src="https://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.js"></script>
 	<!--<script src="nacl-fast.min.js"></script>-->
 	<script src="nacl-fast.js"></script>
 	<script src="sha256.min.js"></script>
+	<script src="wordlist.js"></script>
 	<script src="superpass2.js"></script>
-	
 
+
+	<script type="text/javascript"> 
+		function selectText(element) 
+		{
+			var doc = document;
+			var text = doc.getElementById(element);    
+
+			if (doc.body.createTextRange) { // ms
+				var range = doc.body.createTextRange();
+				range.moveToElementText(text);
+				range.select();
+			} else if (window.getSelection) { // moz, opera, webkit
+				var selection = window.getSelection();            
+				var range = doc.createRange();
+				range.selectNodeContents(text);
+				selection.removeAllRanges();
+				selection.addRange(range);
+			}
+		}
+		
+		function modal_launched(e)
+		{
+			var domain=$('#sp_domain').val();
+			var username=$('#sp_username').val();
+			var salt=$('#sp_salt').val();
+			var sp_password=$('#sp_password').val();
+			var sp_punctuation=$('#sp_punctuation').is(':checked');
+			
+			sp=sp2_superpass(sp_password,domain,username,salt,12,sp_punctuation);
+			
+			$( "#sp_button" ).prop( "disabled", false );
+			$('#pw_modal_title').html('Your Site Password for <em>'+domain+'</em> is:');
+			$('#domainem').html(domain);
+			
+			$('#output_password').html(sp);
+		
+			selectText('output_password');
+			
+			return false;
+		}
+		
+		function init()
+		{
+			$('#site_pw_form').submit(site_submit_handler);
+			$("#output_password_modal").on('shown.bs.modal', modal_launched);
+			$("#cache_button").click(launch_cache_handler);
+			$("#login_button").click(login_handler);
+
+			/*DEBUG
+			$('#sp_domain').val('facebook.com');
+			$('#sp_username').val('barb13');
+			$('#sp_password').val('lighthouse');
+			site_submit_handler();*/
+		}
+
+		function launch_cache_handler()
+		{
+			console.log(sp2_is_loggedin());
+			if(!sp2_is_loggedin())
+			{
+				$('#cache_login_modal').modal('show');
+			}
+			else
+			{
+				cache_view_handler();
+			}
+		}
+		function login_alert(text)
+		{
+			var newalert=$('.login_alert_template').clone(true);
+			newalert.find('.login_alert_text').html(text);
+			var loc=$('.login_alert_location');
+			loc.empty();loc.html(newalert);
+			newalert.show();
+			return newalert;
+		}
+		function login_handler()
+		{
+			try
+			{
+				//todo: set to logging in for timing
+				sp2_login($('#sp_login_username').val(),$('#sp_login_password').val());
+				$('#cache_login_modal').modal('hide');
+				cache_view_handler();
+
+			}
+			catch(e)
+			{
+				login_alert(e.message);
+				$('#delete_cache_button').click(function()
+				{
+					sp2_delete_muid();
+					$('.login_alert_location').empty();
+				});
+			}
+		}
+		function cache_view_handler()
+		{
+			//set up cache view modal
+			$('#cache_view_modal').modal('show');
+		}
+
+		function site_submit_handler()
+		{	
+			$('#pw_modal_title').html('Now remembering password...');
+			$('#output_password').html('<span class="glyphicon glyphicon-time"></span>');
+			$( "#sp_button" ).prop( "disabled", true );
+			$('#output_password_modal').modal('show');
+			
+			return false;
+		}
+
+		var substringMatcher = function(strs) {
+		return function findMatches(q, cb) {
+			if(!$('#master-word-mode').is(':checked'))
+				return cb('');
+			var lastSpace = q.lastIndexOf(' ');
+			var prepend = '';
+			if(lastSpace != -1)
+			{
+				// prepend the part of the string that's already been autocompleted
+				prepend = q.substring(0, lastSpace + 1);
+				// only use characters after space for matching
+				q = q.substring(lastSpace + 1);
+			}
+
+			var matches = [], substrRegex = new RegExp('^' + q, 'i');
+			$.each(strs, function(i, str) {
+			if (substrRegex.test(str)) {
+				matches.push(prepend + str);
+			}
+			});
+
+			cb(matches);
+		};
+		};
+
+		$('#mnemonic-typeahead .typeahead').typeahead({
+			hint: true,
+			highlight: true,
+			minLength: 1
+		},
+		{
+			name: 'wordlist',
+			limit: 10,
+			source: substringMatcher(wordlist)
+		});
+		
+		$('#master-word-mode').click(function() {
+			if($('#master-word-mode').is(':checked')) {
+				$('#mnemonic-spacer').css("line-height", "150px");
+				$("#sp_password").prop("type", "text");
+			}
+			else {
+				$('#mnemonic-spacer').css("line-height", "0px");
+				$("#sp_password").prop("type", "password");
+			}
+		});
+		//$('#master-word-mode').click(); // initialize spacer
 	
+		$(init);
+
+	</script>
+
 </body>
 </html>
