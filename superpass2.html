@@ -68,7 +68,7 @@
 							</div>
 						</div>
 						<div class="modal-footer">
-							<button type="button" class="btn btn-primary" id="login_button">Login</button>
+							<input type="submit" class="btn btn-primary" id="login_button" value="Login"></input>
 							<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
 						</div>
 					</form>
@@ -76,24 +76,31 @@
 			</div>
 		</div>
 		<div class="modal fade in" id="cache_view_modal" role="dialog" aria-hidden="true">
-			<div class="modal-dialog">
+			<div class="modal-dialog" role="document">
 				<div class="modal-content">
-					<form class="form-signin" role="form" id="login_form">
+					<form class="form-signin" role="form" id="cache_form">
 						<div class="modal-header">
 							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 							<h4 class="modal-title">Select a cache item</h4>
 						</div>
 						<div class="modal-body">
-							<select class="custom-select custom-select-sm">
+							<select class="custom-select custom-select-sm" id="cached_login_select">
 							  <option selected>Select a cached login</option>
-							  <option value="1">One</option>
-							  <option value="2">Two</option>
-							  <option value="3">Three</option>
+							  
 							</select>
 						</div>
 						<div class="modal-footer">
-							<button type="button" class="btn btn-danger" id="delete_item_button">Delete</button>
-							<button type="button" class="btn btn-primary" id="populate_button">Populate</button>
+							<div class="btn-group">
+								<button type="button" class="btn btn-primary" id="populate_button">Populate</button>
+								<button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									<span class="sr-only">Toggle Dropdown</span>
+								</button>
+								<div class="dropdown-menu">
+									<a class="dropdown-item" href="#">Delete Item</a>
+									<div class="dropdown-divider"></div>
+									<a class="dropdown-item" href="#">Copy All To Clipboard</a>
+								</div>
+							</div>
 							<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
 						</div>
 					</form>
@@ -176,7 +183,7 @@
 			$('#site_pw_form').submit(site_submit_handler);
 			$("#output_password_modal").on('shown.bs.modal', modal_launched);
 			$("#cache_button").click(launch_cache_handler);
-			$("#login_button").click(login_handler);
+			$("#login_form").submit(login_handler);
 
 			/*DEBUG
 			$('#sp_domain').val('facebook.com');
@@ -225,11 +232,14 @@
 					$('.login_alert_location').empty();
 				});
 			}
+			return false;
 		}
 		function cache_view_handler()
 		{
+			
 			//set up cache view modal
 			$('#cache_view_modal').modal('show');
+			return false;
 		}
 
 		function site_submit_handler()

@@ -99,6 +99,8 @@ function _ls_set(key,value)
 	ls_state=_ls_get();
 	var oldval=ls_state[key] || null;
 	ls_state[key]=value;
+	if(value==null):
+		delete ls_state[key];
 	var nonce=nacl.randomBytes(24);
 	var jsstr=JSON.stringify(ls_state);
 	var enc=new TextEncoder();
@@ -109,6 +111,25 @@ function _ls_set(key,value)
 	var item={'secretbox':uint2str(box),'nonce':uint2str(nonce)};
 	localStorage.setItem(muidkey(muid),JSON.stringify(item));
 	return oldval;
+}
+
+function sp2_entry_key(sp_domain,sp_username)
+{
+	return "d:\""+sp_domain+"\" u:\""+sp_username+"\"";
+}
+
+function sp2_entry_insert(sp_domain,sp_username,sp_salt,sp_punctuation)
+{
+	new_entry={'domain':sp_domain,'username':sp_username,'salt':sp_salt,'punctuation':sp_punctuation};
+	_ls_set(sp2_entry_key(sp_domain,sp_username),new_entry)
+}
+function sp2_entry_delete(sp_key)
+{
+	_ls_set(sp_key);
+}
+function sp2_entry_getall()
+{
+	
 }
 
 function hexrshift(wao,amount)
