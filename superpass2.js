@@ -120,6 +120,18 @@ function _ls_set(key,value)
 	return oldval;
 }
 
+function sp2_export()
+{
+	return localStorage.getItem(muidkey(muid));
+}
+function sp2_import(txt)
+{
+	localStorage.setItem(muidkey(muid),txt);
+	ls_state=null;
+	ls_state=_ls_get();
+}
+
+
 function sp2_entry_key(sp_domain,sp_username)
 {
 	//return "d:\""+sp_domain+"\" u:\""+sp_username+"\"";

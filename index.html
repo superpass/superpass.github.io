@@ -101,12 +101,31 @@
 								<div class="dropdown-menu">
 									<a class="dropdown-item" href="#" id="delete_item_dropdown">Delete Item</a>
 									<div class="dropdown-divider"></div>
-									<a class="dropdown-item" href="#" id="copy_all_item_dropdown">Copy All To Clipboard</a>
+									<a class="dropdown-item" href="#" id="importexport_dropdown">Import/Export</a>
 								</div>
 							</div>
 							<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
 						</div>
 					</form>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade in" id="importexport_modal" role="dialog" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+							<h4 class="modal-title">Import/Export by copy/pasting into here</h4>
+					</div>
+					<div class="modal-body">
+						<div class="form-group">
+							<label for="importexport_text">CacheData</label>
+							<textarea class="form-control" rows="5" id="importexport_text"></textarea>
+						</div> 
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" data-dismiss="modal" id="importbutton">Import</button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -266,6 +285,18 @@
 			}
 			return false;
 		}
+		function importexport_handler()
+		{
+			$('#cache_login_modal').modal('hide');
+			$('#importexport_text').val(sp2_export());
+			$('#importexport_modal').modal('show');
+			$('#importbutton').click(function()
+			{
+				sp2_import($('#importexport_text').val());
+				cache_view_handler();
+			});
+			return false;
+		}
 		function cache_view_handler()
 		{
 			//sp2_entry_insert('facebook.com','Steve132','',false);
@@ -317,6 +348,7 @@
 				sp2_entry_delete($('#cached_item_select').val());
 				cache_view_handler();
 			});
+			$('#importexport_dropdown').click(importexport_handler);
 			//id="populate_button">Populate</button>
 			//<a class="dropdown-item" href="#" id="delete_item_dropdown">Delete Item</a>
 			//<a class="dropdown-item" href="#" id="copy_all_item_dropdown">
