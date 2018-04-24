@@ -86,8 +86,9 @@
 							<h4 class="modal-title">Select a cache item</h4>
 						</div>
 						<div class="modal-body" id="cache_view_body">
+							<p>Select a cached login</p>
 							<select class="custom-select custom-select-sm" id="cached_item_select">
-							  <option selected>Select a cached login</option>
+							  
 							  
 							</select>
 						</div>
@@ -121,7 +122,7 @@
 						<p>Copy-Paste this password.  If you haven't yet, change your password on <em><span id="domainem"></span></em> to this. Login using this password.</p>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-primary" id="sp_save_cache_button" disabled>Save to Cache</button>
+						<button type="button" class="btn btn-primary" id="sp_save_cache_button" disabled>Save to Cache (login first)</button>
 						<button type="button" class="btn btn-primary" data-dismiss="modal" id="sp_button">OK</button>
 						<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
 					</div>
@@ -171,9 +172,18 @@
 			sp=sp2_superpass(sp_password,domain,username,salt,12,sp_punctuation);
 			
 			$( "#sp_button" ).prop( "disabled", false );
+
+			var scb=$('#sp_save_cache_button');
+			scb.prop("disabled",true);
+			scb.html("Save to cache (login first)");
+			scb.addClass("btn-primary");
+			scb.removeClass("btn-success");
 			if(sp2_is_loggedin())
 			{
-				$('#sp_save_cache_button').prop('disabled',false);
+				
+				scb.prop("disabled",false);
+				scb.html("Save to cache");
+				
 				$('#sp_save_cache_button').click(function()
 				{
 					var d=$('#sp_domain').val();
@@ -181,6 +191,10 @@
 					var s=$('#sp_salt').val();
 					var p=$('#sp_punctuation').is(':checked');
 					sp2_entry_insert(d,u,s,p);
+					var scb1=$('#sp_save_cache_button');
+					scb1.addClass("btn-success");
+					scb1.removeClass("btn-primary");
+					scb1.html("Saved");
 				});
 			}
 			$('#pw_modal_title').html('Your Site Password for <em>'+domain+'</em> is:');
@@ -230,13 +244,13 @@
 			newalert.show();
 			return newalert;
 		}
-		function login_handler()
+		function login_handler(e)
 		{
 			try
 			{
 				//todo: set to logging in for timing
 				sp2_login($('#sp_login_username').val(),$('#sp_login_password').val());
-				
+				e.preventDefault();
 				$('#cache_login_modal').modal('hide');
 				cache_view_handler();
 
@@ -259,29 +273,43 @@
 			var entries=sp2_entry_getall();
 			//console.log(entries);
 			var cis=$('#cached_item_select');
+			$("#populate_button").prop('disabled',true);
+			
 			cis.empty();
 			cis.append('<option value="0" selected>Select a cached login</option>');
+
+			cis.change(function()
+			{
+				$("#populate_button").prop('disabled',$('#cached_item_select').val()!="0");
+			});
 			Object.keys(entries).forEach(function(k){
 				var e=sp2_entry_get(k);
 				var txt="d:\""+e['domain']+"\" u:\""+e['username']+"\"";
 				cis.append('<option value="'+k+'">'+txt+'</option>');
 			});
-			$('#cache_form').submit(function()
+			$('#cache_form').submit(function(e)
 			{
 				//var username=$('#sp_username').val();
 				//var salt=$('#sp_salt').val();
 				//var sp_password=$('#sp_password').val();
 				//var sp_punctuation=$('#sp_punctuation').is(':checked');
 				var key=$('#cached_item_select').val();
-				//console.log(key);
-				var entry=sp2_entry_get(key);
-				//console.log(entry);
-				$('#sp_username').val(entry['username']);
-				$('#sp_domain').val(entry['domain']);
-				$('#sp_salt').val(entry['salt']);
-				$('#sp_punctuation').prop('checked', entry['punctuation']);
+				if(key=="0")
+				{
+					e.preventDefault();
+				}
+				else
+				{
+					//console.log(key);
+					var entry=sp2_entry_get(key);
+					//console.log(entry);
+					$('#sp_username').val(entry['username']);
+					$('#sp_domain').val(entry['domain']);
+					$('#sp_salt').val(entry['salt']);
+					$('#sp_punctuation').prop('checked', entry['punctuation']);
 
-				$('#cache_view_modal').modal('hide');
+					$('#cache_view_modal').modal('hide');
+				}
 				return false;
 			});
 			$('#delete_item_dropdown').click(function(){
