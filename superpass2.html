@@ -18,12 +18,14 @@
 		<form class="form-signin" role="form" id="site_pw_form">
 			<h2 class="form-signin-heading">Superpass Password Manager (Version 2)</h2>
 			<h4 class="form-signin-heading">Use this form to get or generate your superpass site passwords.</h4>
+			
 			<h4><em>No registration is required and no information at all is sent to our servers or saved as a cookie. Superpass is implemented entirely in client-side javascript</em></h4>  
+			<p><a href="superpass1.html">(Click here for legacy version)</a></p>
 			<!--<div class="input-group">
 				<input type="text" class="form-control" placeholder="Domain [e.g.,'facebook.com']" required autofocus>
 				<span class="input-group-addon">?</span>
 			</div>-->
-			<div class="row"><button id="cache_button" class="btn" type="button">Populate from Local Cache...</button></div>
+			<div class="row"><button id="cache_button" class="btn" type="button">Local Cache...</button></div>
 			<br/>
 			<div class="row"><input id="sp_domain" type="text" class="form-control" placeholder="Domain [e.g.,'facebook.com']" required autofocus></div>
 			<div class="row"><input id="sp_username" type="text" class="form-control" placeholder="Username [optional]"> <!--Add rollover question mark here--></div>
@@ -40,7 +42,7 @@
 					<input type="checkbox" id="master-word-mode" value="true">Master Word Mode</input>
 				</label>
 				<label class="checkbox">
-					<input id="sp_punctuation" type="checkbox" value="true">Include Punctuation</input>
+					<input id="sp_punctuation" type="checkbox" value="true" checked>Include Punctuation</input>
 				</label>
 			</div>
 			<div class="row"><button class="btn btn-lg btn-primary btn-block" id="site_submit_button">Get Site Password</button></div>
@@ -83,22 +85,22 @@
 							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 							<h4 class="modal-title">Select a cache item</h4>
 						</div>
-						<div class="modal-body">
-							<select class="custom-select custom-select-sm" id="cached_login_select">
+						<div class="modal-body" id="cache_view_body">
+							<select class="custom-select custom-select-sm" id="cached_item_select">
 							  <option selected>Select a cached login</option>
 							  
 							</select>
 						</div>
 						<div class="modal-footer">
 							<div class="btn-group">
-								<button type="button" class="btn btn-primary" id="populate_button">Populate</button>
+								<input type="submit" class="btn btn-primary" id="populate_button" value="Populate"></input>
 								<button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 									<span class="sr-only">Toggle Dropdown</span>
 								</button>
 								<div class="dropdown-menu">
-									<a class="dropdown-item" href="#">Delete Item</a>
+									<a class="dropdown-item" href="#" id="delete_item_dropdown">Delete Item</a>
 									<div class="dropdown-divider"></div>
-									<a class="dropdown-item" href="#">Copy All To Clipboard</a>
+									<a class="dropdown-item" href="#" id="copy_all_item_dropdown">Copy All To Clipboard</a>
 								</div>
 							</div>
 							<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
@@ -119,6 +121,7 @@
 						<p>Copy-Paste this password.  If you haven't yet, change your password on <em><span id="domainem"></span></em> to this. Login using this password.</p>
 					</div>
 					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" id="sp_save_cache_button" disabled>Save to Cache</button>
 						<button type="button" class="btn btn-primary" data-dismiss="modal" id="sp_button">OK</button>
 						<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
 					</div>
@@ -168,6 +171,18 @@
 			sp=sp2_superpass(sp_password,domain,username,salt,12,sp_punctuation);
 			
 			$( "#sp_button" ).prop( "disabled", false );
+			if(sp2_is_loggedin())
+			{
+				$('#sp_save_cache_button').prop('disabled',false);
+				$('#sp_save_cache_button').click(function()
+				{
+					var d=$('#sp_domain').val();
+					var u=$('#sp_username').val();
+					var s=$('#sp_salt').val();
+					var p=$('#sp_punctuation').is(':checked');
+					sp2_entry_insert(d,u,s,p);
+				});
+			}
 			$('#pw_modal_title').html('Your Site Password for <em>'+domain+'</em> is:');
 			$('#domainem').html(domain);
 			
@@ -190,11 +205,13 @@
 			$('#sp_username').val('barb13');
 			$('#sp_password').val('lighthouse');
 			site_submit_handler();*/
+			//var o=sp2_superpass('Snowy132','facebook.com','Steve132','',12,false);
+			//console.log(o);
 		}
 
 		function launch_cache_handler()
 		{
-			console.log(sp2_is_loggedin());
+			//console.log(sp2_is_loggedin());
 			if(!sp2_is_loggedin())
 			{
 				$('#cache_login_modal').modal('show');
@@ -219,6 +236,7 @@
 			{
 				//todo: set to logging in for timing
 				sp2_login($('#sp_login_username').val(),$('#sp_login_password').val());
+				
 				$('#cache_login_modal').modal('hide');
 				cache_view_handler();
 
@@ -236,6 +254,43 @@
 		}
 		function cache_view_handler()
 		{
+			//sp2_entry_insert('facebook.com','Steve132','',false);
+			
+			var entries=sp2_entry_getall();
+			//console.log(entries);
+			var cis=$('#cached_item_select');
+			cis.empty();
+			cis.append('<option value="0" selected>Select a cached login</option>');
+			Object.keys(entries).forEach(function(k){
+				var e=sp2_entry_get(k);
+				var txt="d:\""+e['domain']+"\" u:\""+e['username']+"\"";
+				cis.append('<option value="'+k+'">'+txt+'</option>');
+			});
+			$('#cache_form').submit(function()
+			{
+				//var username=$('#sp_username').val();
+				//var salt=$('#sp_salt').val();
+				//var sp_password=$('#sp_password').val();
+				//var sp_punctuation=$('#sp_punctuation').is(':checked');
+				var key=$('#cached_item_select').val();
+				//console.log(key);
+				var entry=sp2_entry_get(key);
+				//console.log(entry);
+				$('#sp_username').val(entry['username']);
+				$('#sp_domain').val(entry['domain']);
+				$('#sp_salt').val(entry['salt']);
+				$('#sp_punctuation').prop('checked', entry['punctuation']);
+
+				$('#cache_view_modal').modal('hide');
+				return false;
+			});
+			$('#delete_item_dropdown').click(function(){
+				sp2_entry_delete($('#cached_item_select').val());
+				cache_view_handler();
+			});
+			//id="populate_button">Populate</button>
+			//<a class="dropdown-item" href="#" id="delete_item_dropdown">Delete Item</a>
+			//<a class="dropdown-item" href="#" id="copy_all_item_dropdown">
 			
 			//set up cache view modal
 			$('#cache_view_modal').modal('show');
@@ -248,6 +303,7 @@
 			$('#output_password').html('<span class="glyphicon glyphicon-time"></span>');
 			$( "#sp_button" ).prop( "disabled", true );
 			$('#output_password_modal').modal('show');
+
 			
 			return false;
 		}
