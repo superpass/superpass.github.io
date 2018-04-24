@@ -280,7 +280,8 @@
 
 			cis.change(function()
 			{
-				$("#populate_button").prop('disabled',$('#cached_item_select').val()!="0");
+				console.log("Onchange");
+				$("#populate_button").prop('disabled',$('#cached_item_select').val()=="0");
 			});
 			Object.keys(entries).forEach(function(k){
 				var e=sp2_entry_get(k);
