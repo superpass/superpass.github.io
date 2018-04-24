@@ -209,9 +209,12 @@ function makepassword(byt,length,punctuation)
 
 function sp2_superpass(master,domain,username,salt,length,punctuation)
 {
-	metasalt=username+"|"+domain.toLowerCase()+"|"+salt;
-	//console.log(metasalt);
-	byt=sha256.pbkdf2(master,metasalt,recovery_iters,32);
+	var metasalt=username+"|"+domain.toLowerCase()+"|"+salt;
+	var nmaster=master;
+	var enc=new TextEncoder();
+	metasalt=enc.encode(metasalt);
+	nmaster=enc.encode(nmaster);
+	var byt=sha256.pbkdf2(nmaster,metasalt,recovery_iters,32);
 	
 	return makepassword(byt,length,punctuation);
 }
