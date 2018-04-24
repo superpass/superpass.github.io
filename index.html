@@ -16,44 +16,44 @@
 <body>
 	<div class="container">
 		<form class="form-signin" role="form" id="site_pw_form">
-			<h2 class="form-signin-heading">Superpass Password Manager (Version 2)</h2>
-			<h4 class="form-signin-heading">Use this form to get or generate your superpass site passwords.</h4>
+			<h2 class="form-signin-heading">Superpass Password Manager v.2</h2>
+			<h5 class="form-signin-heading">Use this form to get or generate your superpass site passwords.</h5>
 			
-			<h4><em>No registration is required and no information at all is sent to our servers or saved as a cookie. Superpass is implemented entirely in client-side javascript</em></h4>  
+			<h5><em>No registration is required and no information at all is sent to our servers or saved as a cookie. Superpass is implemented entirely in client-side javascript.</em></h5>  
 			<p><a href="superpass1.html">(Click here for legacy version)</a></p>
 			<!--<div class="input-group">
 				<input type="text" class="form-control" placeholder="Domain [e.g.,'facebook.com']" required autofocus>
 				<span class="input-group-addon">?</span>
 			</div>-->
-			<div class="row"><button id="cache_button" class="btn" type="button">Local Cache...</button></div>
+			<div class="row"><button id="cache_button" class="btn btn-info" type="button">Local Cache...</button></div>
 			<br/>
 			<div class="row"><input id="sp_domain" type="text" class="form-control" placeholder="Domain [e.g.,'facebook.com']" required autofocus></div>
 			<div class="row"><input id="sp_username" type="text" class="form-control" placeholder="Username [optional]"> <!--Add rollover question mark here--></div>
 			<div class="row"><input id="sp_salt" type="text" class="form-control" placeholder="Salt [optional]"></div>
 			<br/>				
-			<div class="row">
-				<div id="mnemonic-typeahead">
-					<input id="sp_password" type="password" class="form-control typeahead" placeholder="Master Superpass Password" required>
-				</div>
+			<div class="row" id="mnemonic-typeahead">
+				<input id="sp_password" type="password" class="form-control typeahead" placeholder="Master Superpass Password" required>
 			</div>
 			<div class="row"><br id="mnemonic-spacer" style="line-height:0px;"/></div>
 			<div class="row">
-				<label class="checkbox">
+				<label class="checkbox col-md-6">
 					<input type="checkbox" id="master-word-mode" value="true">Master Word Mode</input>
 				</label>
-				<label class="checkbox">
+				<label class="checkbox col-md-6">
 					<input id="sp_punctuation" type="checkbox" value="true" checked>Include Punctuation</input>
 				</label>
 			</div>
 			<div class="row"><button class="btn btn-lg btn-primary btn-block" id="site_submit_button">Get Site Password</button></div>
 		</form>
-		<div class="modal fade in" id="cache_login_modal" role="dialog" aria-hidden="true">
-			<div class="modal-dialog">
+		<div class="modal fade" id="cache_login_modal" tabindex="-1">
+			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<form class="form-signin" role="form" id="login_form">
 						<div class="modal-header">
-							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 							<h4 class="modal-title">Login/Create user on local cache.</h4>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
 						</div>
 						<div class="modal-body">
 							<div class="row"><input id="sp_login_username" type="text" class="form-control" placeholder="Superpass Username" required autofocus></div>
@@ -77,45 +77,50 @@
 				</div>
 			</div>
 		</div>
-		<div class="modal fade in" id="cache_view_modal" role="dialog" aria-hidden="true">
+		<div class="modal fade" id="cache_view_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
-					<form class="form-signin" role="form" id="cache_form">
-						<div class="modal-header">
-							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-							<h4 class="modal-title">Select a cache item</h4>
-						</div>
-						<div class="modal-body" id="cache_view_body">
-							<p>Select a cached login</p>
-							<select class="custom-select custom-select-sm" id="cached_item_select">
-							  
-							  
-							</select>
-						</div>
-						<div class="modal-footer">
-							<div class="btn-group">
-								<input type="submit" class="btn btn-primary" id="populate_button" value="Populate"></input>
-								<button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-									<span class="sr-only">Toggle Dropdown</span>
+					<div class="container-fluid">
+						<form class="form-signin" role="form" id="cache_form">
+							<div class="modal-header">
+								<h4 class="modal-title">Select a local cache.</h4>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
 								</button>
-								<div class="dropdown-menu">
-									<a class="dropdown-item" href="#" id="delete_item_dropdown">Delete Item</a>
-									<div class="dropdown-divider"></div>
-									<a class="dropdown-item" href="#" id="importexport_dropdown">Import/Export</a>
-								</div>
 							</div>
-							<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
-						</div>
-					</form>
+							<div class="modal-body" id="cache_view_body">
+								<select class="custom-select custom-select-sm" id="cached_item_select">
+								  
+								  
+								</select>
+							</div>
+							<div class="modal-footer">
+								<div class="btn-group">
+									<input type="submit" class="btn btn-primary" id="populate_button" value="Populate"></input>
+									<button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										<span class="sr-only">Toggle Dropdown</span>
+									</button>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="#" id="delete_item_dropdown">Delete Item</a>
+										<div class="dropdown-divider"></div>
+										<a class="dropdown-item" href="#" id="importexport_dropdown">Import/Export</a>
+									</div>
+								</div>
+								<!--<button type="button" class="btn btn-primary">Save changes</button> copy to clipboard?-->
+							</div>
+						</form>
+					</div>
 				</div>
 			</div>
 		</div>
-		<div class="modal fade in" id="importexport_modal" role="dialog" aria-hidden="true">
+		<div class="modal fade" id="importexport_modal" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
-							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-							<h4 class="modal-title">Import/Export by copy/pasting into here</h4>
+						<h4 class="modal-title">Import/Export by copy/pasting into here</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
 					</div>
 					<div class="modal-body">
 						<div class="form-group">
@@ -129,12 +134,14 @@
 				</div>
 			</div>
 		</div>
-		<div class="modal fade in" id="output_password_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal fade" id="output_password_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 						<h4 class="modal-title" id="pw_modal_title"></h4>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
 					</div>
 					<div class="modal-body">
 						<h1 id="output_password" class="password"></h1>
