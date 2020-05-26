@@ -30,7 +30,8 @@
 			<div class="row"><input id="sp_domain" type="text" class="form-control" placeholder="Domain [e.g.,'facebook.com']" required autofocus></div>
 			<div class="row"><input id="sp_username" type="text" class="form-control" placeholder="Username [optional]"> <!--Add rollover question mark here--></div>
 			<div class="row"><input id="sp_salt" type="text" class="form-control" placeholder="Salt [optional]"></div>
-			<br/>				
+			<br/>
+			<div class="row" id="verifycode"><p><i>correctness codeword: <b><span id="sp_verify_code"></span></b></i></div>							
 			<div class="row" id="mnemonic-typeahead">
 				<input id="sp_password" type="password" class="form-control typeahead" placeholder="Master Superpass Password" required>
 			</div>
@@ -145,7 +146,7 @@
 					</div>
 					<div class="modal-body">
 						<h1 id="output_password" class="password"></h1>
-						<p>Copy-Paste this password.  If you haven't yet, change your password on <em><span id="domainem"></span></em> to this. Login using this password.</p>
+						<p>Copy-Paste this password.  If you haven't yet, change your password on <em><span id="domainem"></span></em> to this. Login using this password.</p>	
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-primary" id="sp_save_cache_button" disabled>Save to Cache (login first)</button>
@@ -186,6 +187,32 @@
 				selection.addRange(range);
 			}
 		}
+		function substringMatcher(strs)
+		{
+			return function findMatches(q, cb) 
+			{
+				if(!$('#master-word-mode').is(':checked'))
+					return cb('');
+				var lastSpace = q.lastIndexOf(' ');
+				var prepend = '';
+				if(lastSpace != -1)
+				{
+					// prepend the part of the string that's already been autocompleted
+					prepend = q.substring(0, lastSpace + 1);
+					// only use characters after space for matching
+					q = q.substring(lastSpace + 1);
+				}
+
+				var matches = [], substrRegex = new RegExp('^' + q, 'i');
+				$.each(strs, function(i, str) {
+					if (substrRegex.test(str)) {
+						matches.push(prepend + str);
+					}
+				});
+
+				cb(matches);
+			};
+		}
 		
 		function modal_launched(e)
 		{
@@ -196,6 +223,7 @@
 			var sp_punctuation=$('#sp_punctuation').is(':checked');
 			
 			sp=sp2_superpass(sp_password,domain,username,salt,12,sp_punctuation);
+
 			
 			$( "#sp_button" ).prop( "disabled", false );
 
@@ -239,6 +267,39 @@
 			$("#output_password_modal").on('shown.bs.modal', modal_launched);
 			$("#cache_button").click(launch_cache_handler);
 			$("#login_form").submit(login_handler);
+
+			console.log("V2");
+
+			$('#sp_password').keydown( function()
+			{
+				var pwcode=sp2_master_verify_byte($(this).val());
+				$('#sp_verify_code').html(wordlist[pwcode*4]);
+				$('#verifycode').show();
+			});
+			$('#verifycode').hide();
+
+			$('#mnemonic-typeahead .typeahead').typeahead({
+				hint: true,
+				highlight: true,
+				minLength: 1
+			},
+			{
+				name: 'wordlist',
+				limit: 10,
+				source: substringMatcher(wordlist)
+			});
+
+			
+			$('#master-word-mode').click(function() {
+				if($('#master-word-mode').is(':checked')) {
+					$('#mnemonic-spacer').css("line-height", "150px");
+					$("#sp_password").prop("type", "text");
+				}
+				else {
+					$('#mnemonic-spacer').css("line-height", "0px");
+					$("#sp_password").prop("type", "password");
+				}
+			});
 
 			/*DEBUG
 			$('#sp_domain').val('facebook.com');
@@ -346,7 +407,6 @@
 					$('#sp_domain').val(entry['domain']);
 					$('#sp_salt').val(entry['salt']);
 					$('#sp_punctuation').prop('checked', entry['punctuation']);
-
 					$('#cache_view_modal').modal('hide');
 				}
 				return false;
@@ -376,53 +436,6 @@
 			return false;
 		}
 
-		var substringMatcher = function(strs) {
-		return function findMatches(q, cb) {
-			if(!$('#master-word-mode').is(':checked'))
-				return cb('');
-			var lastSpace = q.lastIndexOf(' ');
-			var prepend = '';
-			if(lastSpace != -1)
-			{
-				// prepend the part of the string that's already been autocompleted
-				prepend = q.substring(0, lastSpace + 1);
-				// only use characters after space for matching
-				q = q.substring(lastSpace + 1);
-			}
-
-			var matches = [], substrRegex = new RegExp('^' + q, 'i');
-			$.each(strs, function(i, str) {
-			if (substrRegex.test(str)) {
-				matches.push(prepend + str);
-			}
-			});
-
-			cb(matches);
-		};
-		};
-
-		$('#mnemonic-typeahead .typeahead').typeahead({
-			hint: true,
-			highlight: true,
-			minLength: 1
-		},
-		{
-			name: 'wordlist',
-			limit: 10,
-			source: substringMatcher(wordlist)
-		});
-		
-		$('#master-word-mode').click(function() {
-			if($('#master-word-mode').is(':checked')) {
-				$('#mnemonic-spacer').css("line-height", "150px");
-				$("#sp_password").prop("type", "text");
-			}
-			else {
-				$('#mnemonic-spacer').css("line-height", "0px");
-				$("#sp_password").prop("type", "password");
-			}
-		});
-		//$('#master-word-mode').click(); // initialize spacer
 	
 		$(init);
 

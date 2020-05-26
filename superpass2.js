@@ -219,6 +219,14 @@ function sp2_superpass(master,domain,username,salt,length,punctuation)
 	return makepassword(byt,length,punctuation);
 }
 
+function sp2_master_verify_byte(master)
+{
+	var enc=new TextEncoder();
+	var nmaster=enc.encode(master);
+	var byt=sha256.pbkdf2(nmaster,"sp2_mp_verify",256,32);
+	return byt[0];
+}
+
 $(function()
 {
 	reset_state();
